@@ -52,11 +52,11 @@
     $table = new html_table();
 
     if ($usesections) {
-        $table->head  = array ($strsectionname, get_string("question"), get_string("answer"));
-        $table->align = array ("center", "left", "left");
+        $table->head  = array ($strsectionname, get_string("question"), get_string("answer"), "Fecha Respuesta", "Description", "Fecha Open", "Fecha Cierre");
+        $table->align = array ("center", "left", "left", "left");
     } else {
-        $table->head  = array (get_string("question"), get_string("answer"));
-        $table->align = array ("left", "left");
+        $table->head  = array (get_string("question"), get_string("answer"), "Fecha Respuesta", "Description", "Fecha Open", "Fecha Cierre");
+        $table->align = array ("left", "left", "left");
     }
 
     $currentsection = "";
@@ -69,9 +69,32 @@
         }
         if (!empty($answer->optionid)) {
             $aa = format_string(choice_get_option_text($choice, $answer->optionid));
+            
+            //Fecha respuesta
+            $bb = userdate($answer->timemodified);
+            //$bb = format_string(choice_get_option_time($choice, $answer->optionid));
+            
         } else {
             $aa = "";
+            //Mas opciones a añadir aqui
+            $bb = "";
+
         }
+        
+        //DATOS GENERALES DE LA CHOICE
+            //Descripcion del choice
+            $cc = $choice->intro;
+            //$cc = format_string(choice_get_option_intro($choice, $choice->id));
+            //Fecha cierre y apertura en el caso de que esté especificado
+            if($choice->timeopen == 0)
+            {
+                $dd = "";
+                $ee = "";
+            } else {
+                $dd = userdate($choice->timeopen);
+                $ee = userdate($choice->timeclose);
+            }
+        
         if ($usesections) {
             $printsection = "";
             if ($choice->section !== $currentsection) {
@@ -94,9 +117,9 @@
             $tt_href = "<a href=\"view.php?id=$choice->coursemodule\">".format_string($choice->name,true)."</a>";
         }
         if ($usesections) {
-            $table->data[] = array ($printsection, $tt_href, $aa);
+            $table->data[] = array ($printsection, $tt_href, $aa, $bb, $cc, $dd, $ee);
         } else {
-            $table->data[] = array ($tt_href, $aa);
+            $table->data[] = array ($tt_href, $aa, $bb, $cc, $dd, $ee);
         }
     }
     echo "<br />";
