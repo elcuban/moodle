@@ -605,30 +605,6 @@ function choice_get_option_text($choice, $id) {
     }
 }
 
-
-////Devuelve la fecha
-//function choice_get_option_time($choice, $id) {
-//    global $DB;
-//
-//    if ($result = $DB->get_record("choice_options", array("id" => $id))) {
-//        return userdate($result->timemodified);
-//    } else {
-//        return get_string("notanswered", "choice");
-//    }
-//}
-//
-////Devuelve la fecha
-//function choice_get_option_intro($choice, $id) {
-//    global $DB;
-//
-//    if ($result = $DB->get_record("choice", array("id" => $id))) {
-//        return $result->intro;
-//    } else {
-//        return get_string("notanswered", "choice");
-//    }
-//}
-
-
 /**
  * Gets a full choice record
  *

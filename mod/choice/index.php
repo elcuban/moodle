@@ -5,6 +5,15 @@
 
     $id = required_param('id',PARAM_INT);   // course
 
+    //get the $cm id, and verify that it is correct
+    if(!$cm = get_coursemodule_from_id('choice', $id)){
+        error("Course module ID was incorrect");      
+    }      
+    
+    //get the module context
+    $context = get_context_instance(CONTEXT_MODULE, $cm->id);
+    
+    
     $PAGE->set_url('/mod/choice/index.php', array('id'=>$id));
 
     if (!$course = $DB->get_record('course', array('id'=>$id))) {
@@ -50,13 +59,24 @@
     $timenow = time();
 
     $table = new html_table();
-
-    if ($usesections) {
-        $table->head  = array ($strsectionname, get_string("question"), get_string("answer"), "Fecha Respuesta", "Description", "Fecha Open", "Fecha Cierre");
-        $table->align = array ("center", "left", "left", "left");
-    } else {
-        $table->head  = array (get_string("question"), get_string("answer"), "Fecha Respuesta", "Description", "Fecha Open", "Fecha Cierre");
-        $table->align = array ("left", "left", "left");
+    
+    //check the permission
+    if(has_capability('mod/choice:viewextra', $context)){
+        if ($usesections) {
+            $table->head  = array ($strsectionname, get_string("question"), get_string("answer"), "Description", "Time Modified", "Time Open", "Time Close", "Show Results?", "Limit Answers?", "Allow Update?", "Show Unanswered?", "Display");
+            $table->align = array ("center", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left", "left");
+        } else {
+            $table->head  = array (get_string("question"), get_string("answer"), "Description", "Time Modified", "Time Open", "Time Close", "Show Results?", "Limit Answers?", "Allow Update?", "Show Unanswered?", "Display");
+            $table->align = array ("left", "left", "left","left", "left", "left", "left", "left", "left", "left", "left");
+        }
+    }else{
+        if ($usesections) {
+            $table->head  = array ($strsectionname, get_string("question"), get_string("answer"));
+            $table->align = array ("center", "left", "left");
+        } else {
+            $table->head  = array (get_string("question"), get_string("answer"));
+            $table->align = array ("left", "left");
+        }
     }
 
     $currentsection = "";
@@ -70,30 +90,69 @@
         if (!empty($answer->optionid)) {
             $aa = format_string(choice_get_option_text($choice, $answer->optionid));
             
-            //Fecha respuesta
-            $bb = userdate($answer->timemodified);
-            //$bb = format_string(choice_get_option_time($choice, $answer->optionid));
+            //Date response
+            $timemodified = userdate($answer->timemodified);    
             
         } else {
             $aa = "";
-            //Mas opciones a añadir aqui
-            $bb = "";
+            $timemodified = "";
 
         }
         
-        //DATOS GENERALES DE LA CHOICE
-            //Descripcion del choice
-            $cc = $choice->intro;
-            //$cc = format_string(choice_get_option_intro($choice, $choice->id));
-            //Fecha cierre y apertura en el caso de que esté especificado
+        //MORE CHOICE OPTIONS
+            //Description of choice
+            $intro = $choice->intro;
+
+            //Closing and opening date if it is specified
             if($choice->timeopen == 0)
             {
-                $dd = "";
-                $ee = "";
+                $timeopen = "";
+                $timeclose = "";
             } else {
-                $dd = userdate($choice->timeopen);
-                $ee = userdate($choice->timeclose);
+                $timeopen = userdate($choice->timeopen);
+                $timeclose = userdate($choice->timeclose);
             }
+            
+            if($choice->showresults)
+            {
+                $showresult = "<input type='checkbox' checked='checked' DISABLED>"; 
+            }
+            else{
+                $showresult = "<input type='checkbox' DISABLED>";
+            }
+            
+            if($choice->limitanswers)
+            {
+                $limitanswers = "<input type='checkbox' checked='checked' DISABLED>"; 
+            }
+            else{
+                $limitanswers = "<input type='checkbox' DISABLED>";
+            }
+            
+            if($choice->allowupdate)
+            {
+                $allowupdate = "<input type='checkbox' checked='checked' DISABLED>"; 
+            }
+            else{
+                $allowupdate = "<input type='checkbox' DISABLED>";
+            }
+            
+            if($choice->showunanswered)
+            {
+                $showunanswered = "<input type='checkbox' checked='checked' DISABLED>"; 
+            }
+            else{
+                $showunanswered = "<input type='checkbox' DISABLED>";
+            }
+            
+            if($choice->display)
+            {
+                $display = "Vertically"; 
+            }
+            else{
+                $display = "Horizontally";
+            }
+            
         
         if ($usesections) {
             $printsection = "";
@@ -116,10 +175,20 @@
             //Show normal if the mod is visible
             $tt_href = "<a href=\"view.php?id=$choice->coursemodule\">".format_string($choice->name,true)."</a>";
         }
-        if ($usesections) {
-            $table->data[] = array ($printsection, $tt_href, $aa, $bb, $cc, $dd, $ee);
-        } else {
-            $table->data[] = array ($tt_href, $aa, $bb, $cc, $dd, $ee);
+        
+        //check the permission
+        if(has_capability('mod/choice:viewextracol', $context)){
+            if ($usesections) {
+                $table->data[] = array ($printsection, $tt_href, $aa, $intro, $timemodified, $timeopen, $timeclose, $showresult, $limitanswers, $allowupdate, $showunanswered, $display);
+            } else {
+                $table->data[] = array ($tt_href, $aa, $intro, $timemodified, $timeopen, $timeclose, $showresult, $limitanswers, $allowupdate, $showunanswered, $display);
+            }
+        }else{
+            if ($usesections) {
+                $table->data[] = array ($printsection, $tt_href, $aa);
+            } else {
+                $table->data[] = array ($tt_href, $aa);
+            }
         }
     }
     echo "<br />";
